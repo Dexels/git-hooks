@@ -1,0 +1,33 @@
+#!/bin/sh
+#git checkout -f
+echo "Performing hook"
+if ! [ -t 0 ]; then
+  read -a ref
+fi
+IFS='/' read -ra REF <<< "${ref[2]}"
+
+
+if [ $(git rev-parse --is-bare-repository) = true ]
+then
+    REPOSITORY_BASENAME=$(basename "$PWD")
+    REPOSITORY_BASENAME=${REPOSITORY_BASENAME%.git}
+else
+    REPOSITORY_BASENAME=$(basename $(readlink -nf "$PWD"/..))
+fi
+echo REPOSITORY_BASENAME is $REPOSITORY_BASENAME
+
+WORKDIR=$HOME/runtime/$REPOSITORY_BASENAME
+export WORKDIR
+mkdir -p $WORKDIR
+echo "REF: $REF"
+echo "ref: $ref"
+echo "Pushing to work dir: $WORKDIR"
+branch="${REF[2]}"
+echo "branch identified as $branch"
+if [ "master" == "$branch" ]; then
+  git --work-tree=$WORKDIR --git-dir=. checkout -f $branch
+  echo 'Changes pushed live.'
+fi
+#cd $WORKDIR/bin
+#./update.sh
+
